@@ -56,11 +56,23 @@
                 <th scope="col">Precio salida</th>
                 <th scope="col">TTFT</th>
                 <th scope="col">Tokens diarios</th>
+                <th scope="col"><span class="visually-hidden">Acciones</span></th>
               </tr>
             </thead>
             <tbody id="token-table-body"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="token-detail" class="token-detail" aria-labelledby="token-detail-title" tabindex="-1" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Detalle</p>
+            <h2 id="token-detail-title">Modelo seleccionado</h2>
+          </div>
+          <button id="close-token-detail" class="detail-close" type="button">Cerrar detalle</button>
+        </div>
+        <dl id="token-detail-list" class="detail-grid"></dl>
       </section>
     </main>
 
