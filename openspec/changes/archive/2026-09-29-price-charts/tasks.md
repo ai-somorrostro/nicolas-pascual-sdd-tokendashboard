@@ -16,4 +16,4 @@
 
 - [x] 3.1 Implementar el drawer fijo que entra desde la derecha, su fondo de cierre, cierre con Escape y bloqueo del desplazamiento de fondo; verificar los estados abierto y cerrado.
 - [x] 3.2 Devolver el foco a la fila que abrio el drawer y mantener el grafico de comparacion dentro del mismo panel; verificar la navegacion con teclado.
-- [ ] 3.3 Ejecutar `node --check js/main.js`, `openspec validate price-charts --strict`, validacion JSON y comprobacion HTTP local; verificar que no se añaden dependencias ni se modifica `mock-data.json`.
+- [x] 3.3 Ejecutar `node --check js/main.js`, `openspec validate price-charts --strict`, validacion JSON y comprobacion HTTP local; verificar que no se añaden dependencias ni se modifica `mock-data.json`.
