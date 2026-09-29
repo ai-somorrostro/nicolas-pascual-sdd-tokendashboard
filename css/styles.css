@@ -16,6 +16,10 @@ body {
   background: #f5f7f4;
 }
 
+body.drawer-open {
+  overflow: hidden;
+}
+
 .app-header {
   border-bottom: 1px solid #d6ddd5;
   background: #ffffff;
@@ -121,12 +125,72 @@ h2 {
   border-top: 1px solid #d6ddd5;
 }
 
+.token-list-layout {
+  display: block;
+}
+
+.comparison-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.comparison-toolbar p {
+  margin: 0;
+  color: #52635a;
+  font-size: 0.8125rem;
+}
+
 .token-detail {
-  margin-top: 32px;
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100%);
+  margin: 0;
+  overflow-y: auto;
   padding: 24px;
   border: 1px solid #d6ddd5;
-  border-radius: 6px;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
   background: #ffffff;
+  box-shadow: -16px 0 40px rgb(27 38 32 / 16%);
+  transform: translateX(100%);
+  transition: transform 180ms ease, visibility 180ms ease;
+  visibility: hidden;
+}
+
+.token-detail:not([hidden]) {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.token-detail[hidden] {
+  display: block;
+  pointer-events: none;
+}
+
+.token-detail-backdrop {
+  position: fixed;
+  z-index: 19;
+  inset: 0;
+  background: rgb(27 38 32 / 35%);
+  opacity: 0;
+  transition: opacity 180ms ease, visibility 180ms ease;
+  visibility: hidden;
+}
+
+.token-detail-backdrop:not([hidden]) {
+  opacity: 1;
+  visibility: visible;
+}
+
+.token-detail-backdrop[hidden] {
+  display: block;
+  pointer-events: none;
 }
 
 .token-detail:focus-visible {
@@ -150,6 +214,16 @@ h2 {
 .detail-close:hover,
 .detail-button:hover {
   background: #0d7460;
+}
+
+.detail-close:disabled,
+.detail-button:disabled,
+.detail-close:disabled:hover,
+.detail-button:disabled:hover {
+  border-color: #9eaea2;
+  color: #69776f;
+  background: #edf1ed;
+  cursor: not-allowed;
 }
 
 .detail-close:focus-visible,
@@ -290,6 +364,27 @@ table {
   font-size: 0.875rem;
 }
 
+.token-row {
+  cursor: pointer;
+}
+
+.token-row:focus-visible {
+  outline: 3px solid #e67e22;
+  outline-offset: -3px;
+}
+
+.selection-cell {
+  width: 48px;
+  text-align: center;
+}
+
+.selection-cell input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0d7460;
+  cursor: pointer;
+}
+
 th,
 td {
   border-bottom: 1px solid #e3e8e2;
@@ -311,6 +406,98 @@ tbody tr:last-child td {
 
 tbody tr:hover {
   background: #f5f7f4;
+}
+
+.price-chart {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.chart-model {
+  display: grid;
+  gap: 12px;
+}
+
+.chart-model h3 {
+  margin: 0;
+  color: #173d32;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.chart-metric {
+  display: grid;
+  gap: 6px;
+}
+
+.chart-metric-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #52635a;
+  font-size: 0.75rem;
+}
+
+.chart-metric-header strong {
+  color: #1b2620;
+  font-weight: 760;
+}
+
+.chart-bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #e3e8e2;
+}
+
+.chart-bar {
+  min-width: 4px;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.chart-bar.input {
+  background: #0d7460;
+}
+
+.chart-bar.output {
+  background: #e67e22;
+}
+
+.chart-summary {
+  margin: 18px 0 0;
+  color: #69776f;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.chart-legend {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  color: #52635a;
+  font-size: 0.75rem;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-swatch.input {
+  background: #0d7460;
+}
+
+.legend-swatch.output {
+  background: #e67e22;
 }
 
 .metric-card {
@@ -360,6 +547,10 @@ tbody tr:hover {
   .detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .token-list-layout {
+    display: block;
+  }
 }
 
 @media (max-width: 520px) {
@@ -377,6 +568,15 @@ tbody tr:hover {
     align-items: start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .comparison-toolbar {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .comparison-toolbar .detail-button {
+    width: 100%;
   }
 
   .summary-grid {
