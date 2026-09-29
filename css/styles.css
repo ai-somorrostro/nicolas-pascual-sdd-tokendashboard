@@ -115,6 +115,12 @@ h2 {
   border-top: 1px solid #d6ddd5;
 }
 
+.token-list-section {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid #d6ddd5;
+}
+
 .section-heading {
   display: flex;
   align-items: end;
@@ -152,6 +158,49 @@ h2 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #d6ddd5;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.table-container:focus-visible {
+  outline: 3px solid #e67e22;
+  outline-offset: 3px;
+}
+
+table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  color: #1b2620;
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e3e8e2;
+  padding: 14px 16px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: #52635a;
+  font-size: 0.75rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #f5f7f4;
 }
 
 .metric-card {
@@ -218,6 +267,11 @@ h2 {
 
   .summary-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  th,
+  td {
+    padding: 12px 14px;
   }
 
   .metric-card {
