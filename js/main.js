@@ -5,6 +5,11 @@
   const tokenListCount = document.querySelector("#token-list-count");
   const tokenTableContainer = document.querySelector("#token-table-container");
   const tokenTableBody = document.querySelector("#token-table-body");
+  const tokenDetail = document.querySelector("#token-detail");
+  const tokenDetailTitle = document.querySelector("#token-detail-title");
+  const tokenDetailList = document.querySelector("#token-detail-list");
+  const closeTokenDetail = document.querySelector("#close-token-detail");
+  let detailOpener = null;
   const compactFormatter = new Intl.NumberFormat("es-ES", {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -116,6 +121,15 @@
         row.append(cell);
       }
 
+      const actionCell = document.createElement("td");
+      const detailButton = document.createElement("button");
+      detailButton.className = "detail-button";
+      detailButton.type = "button";
+      detailButton.textContent = "Ver detalle";
+      detailButton.addEventListener("click", () => openTokenDetail(model, detailButton));
+      actionCell.append(detailButton);
+      row.append(actionCell);
+
       return row;
     });
 
@@ -126,6 +140,37 @@
     tokenListCount.hidden = false;
     tokenTableContainer.hidden = false;
   }
+
+  function openTokenDetail(model, opener) {
+    const fields = [
+      ["Modalidad de entrada", model.inputModality],
+      ["Modalidad de salida", model.outputModality],
+      ["Precio de entrada", priceFormatter.format(model.inputPricePerToken)],
+      ["Precio de salida", priceFormatter.format(model.outputPricePerToken)],
+      ["TTFT", `${model.ttft_ms} ms`],
+      ["Tokens diarios", compactFormatter.format(model.inputTokensDay + model.outputTokensDay)],
+      ["Tokens semanales", compactFormatter.format(model.inputTokensWeek + model.outputTokensWeek)],
+    ];
+
+    tokenDetailTitle.textContent = model.name;
+    tokenDetailList.replaceChildren(...fields.flatMap(([label, value]) => {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = value;
+      return [term, description];
+    }));
+    detailOpener = opener;
+    tokenDetail.hidden = false;
+    tokenDetail.focus();
+  }
+
+  function closeDetail() {
+    tokenDetail.hidden = true;
+    detailOpener?.focus();
+  }
+
+  closeTokenDetail.addEventListener("click", closeDetail);
 
   async function loadDashboard() {
     showStatus("Cargando datos de los modelos...", "loading");
