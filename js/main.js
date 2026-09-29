@@ -1,6 +1,10 @@
 (() => {
   const statusElement = document.querySelector("#data-status");
   const summaryGrid = document.querySelector("#summary-grid");
+  const tokenListStatus = document.querySelector("#token-list-status");
+  const tokenListCount = document.querySelector("#token-list-count");
+  const tokenTableContainer = document.querySelector("#token-table-container");
+  const tokenTableBody = document.querySelector("#token-table-body");
   const compactFormatter = new Intl.NumberFormat("es-ES", {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -15,6 +19,10 @@
     "inputTokensWeek",
     "outputTokensWeek",
   ];
+  const priceFormatter = new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 8,
+    maximumFractionDigits: 8,
+  });
 
   function showStatus(message, state) {
     summaryGrid.hidden = true;
@@ -78,6 +86,47 @@
     summaryGrid.hidden = false;
   }
 
+  function renderTokenList(models) {
+    tokenTableBody.replaceChildren();
+
+    if (models.length === 0) {
+      tokenTableContainer.hidden = true;
+      tokenListCount.hidden = true;
+      tokenListStatus.hidden = false;
+      tokenListStatus.dataset.state = "empty";
+      tokenListStatus.textContent = "No hay modelos disponibles para mostrar.";
+      return;
+    }
+
+    const rows = models.map((model) => {
+      const row = document.createElement("tr");
+      const values = [
+        model.name,
+        model.inputModality,
+        model.outputModality,
+        priceFormatter.format(model.inputPricePerToken),
+        priceFormatter.format(model.outputPricePerToken),
+        `${model.ttft_ms} ms`,
+        compactFormatter.format(model.inputTokensDay + model.outputTokensDay),
+      ];
+
+      for (const value of values) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+
+      return row;
+    });
+
+    tokenTableBody.append(...rows);
+    tokenListStatus.hidden = true;
+    delete tokenListStatus.dataset.state;
+    tokenListCount.textContent = `${models.length} modelos`;
+    tokenListCount.hidden = false;
+    tokenTableContainer.hidden = false;
+  }
+
   async function loadDashboard() {
     showStatus("Cargando datos de los modelos...", "loading");
 
@@ -94,6 +143,7 @@
       }
 
       renderSummary(models);
+      renderTokenList(models);
     } catch (error) {
       const message =
         location.protocol === "file:"

@@ -35,6 +35,33 @@
         </div>
         <div id="summary-grid" class="summary-grid" aria-live="polite" hidden></div>
       </section>
+
+      <section class="token-list-section" aria-labelledby="token-list-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Modelos</p>
+            <h2 id="token-list-title">Lista de modelos</h2>
+          </div>
+          <span id="token-list-count" class="source-label" hidden></span>
+        </div>
+        <div id="token-list-status" class="status-message" role="status" aria-live="polite" hidden></div>
+        <div id="token-table-container" class="table-container" tabindex="0" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Modelo</th>
+                <th scope="col">Entrada</th>
+                <th scope="col">Salida</th>
+                <th scope="col">Precio entrada</th>
+                <th scope="col">Precio salida</th>
+                <th scope="col">TTFT</th>
+                <th scope="col">Tokens diarios</th>
+              </tr>
+            </thead>
+            <tbody id="token-table-body"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
 
     <footer class="app-footer">Token Dashboard</footer>
