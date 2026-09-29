@@ -3,6 +3,7 @@
   const summaryGrid = document.querySelector("#summary-grid");
   const tokenListStatus = document.querySelector("#token-list-status");
   const tokenListCount = document.querySelector("#token-list-count");
+  const tokenSearch = document.querySelector("#token-search");
   const tokenTableContainer = document.querySelector("#token-table-container");
   const tokenTableBody = document.querySelector("#token-table-body");
   const tokenDetail = document.querySelector("#token-detail");
@@ -10,6 +11,8 @@
   const tokenDetailList = document.querySelector("#token-detail-list");
   const closeTokenDetail = document.querySelector("#close-token-detail");
   let detailOpener = null;
+  let detailModel = null;
+  let loadedModels = [];
   const compactFormatter = new Intl.NumberFormat("es-ES", {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -58,6 +61,28 @@
     );
   }
 
+  function normalizeSearchValue(value) {
+    return String(value)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es-ES")
+      .trim();
+  }
+
+  function filterModels(models, query) {
+    const normalizedQuery = normalizeSearchValue(query);
+
+    if (!normalizedQuery) {
+      return models;
+    }
+
+    return models.filter((model) =>
+      [model.name, model.inputModality, model.outputModality].some((field) =>
+        normalizeSearchValue(field).includes(normalizedQuery),
+      ),
+    );
+  }
+
   function createMetricCard(label, value, detail) {
     const article = document.createElement("article");
     article.className = "metric-card";
@@ -91,15 +116,18 @@
     summaryGrid.hidden = false;
   }
 
-  function renderTokenList(models) {
+  function renderTokenList(models, query = "") {
     tokenTableBody.replaceChildren();
 
     if (models.length === 0) {
       tokenTableContainer.hidden = true;
-      tokenListCount.hidden = true;
+      tokenListCount.textContent = "0 modelos";
+      tokenListCount.hidden = false;
       tokenListStatus.hidden = false;
       tokenListStatus.dataset.state = "empty";
-      tokenListStatus.textContent = "No hay modelos disponibles para mostrar.";
+      tokenListStatus.textContent = query.trim()
+        ? `No se encontraron modelos para "${query.trim()}".`
+        : "No hay modelos disponibles para mostrar.";
       return;
     }
 
@@ -160,6 +188,7 @@
       description.textContent = value;
       return [term, description];
     }));
+    detailModel = model;
     detailOpener = opener;
     tokenDetail.hidden = false;
     tokenDetail.focus();
@@ -167,10 +196,27 @@
 
   function closeDetail() {
     tokenDetail.hidden = true;
-    detailOpener?.focus();
+    if (detailOpener?.isConnected) {
+      detailOpener.focus();
+    }
+    detailModel = null;
+    detailOpener = null;
   }
 
   closeTokenDetail.addEventListener("click", closeDetail);
+
+  function updateTokenList() {
+    const query = tokenSearch.value;
+    const filteredModels = filterModels(loadedModels, query);
+
+    if (detailModel && !filteredModels.includes(detailModel)) {
+      closeDetail();
+    }
+
+    renderTokenList(filteredModels, query);
+  }
+
+  tokenSearch.addEventListener("input", updateTokenList);
 
   async function loadDashboard() {
     showStatus("Cargando datos de los modelos...", "loading");
@@ -187,9 +233,12 @@
         throw new Error("El archivo de datos no tiene el formato esperado.");
       }
 
+      loadedModels = models;
+      tokenSearch.disabled = false;
       renderSummary(models);
-      renderTokenList(models);
+      updateTokenList();
     } catch (error) {
+      tokenSearch.disabled = true;
       const message =
         location.protocol === "file:"
           ? "Abre el dashboard desde un servidor HTTP local para cargar los datos."
