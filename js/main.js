@@ -4,14 +4,22 @@
   const tokenListStatus = document.querySelector("#token-list-status");
   const tokenListCount = document.querySelector("#token-list-count");
   const tokenSearch = document.querySelector("#token-search");
+  const comparisonStatus = document.querySelector("#comparison-status");
+  const compareSelected = document.querySelector("#compare-selected");
   const tokenTableContainer = document.querySelector("#token-table-container");
   const tokenTableBody = document.querySelector("#token-table-body");
   const tokenDetail = document.querySelector("#token-detail");
+  const tokenDetailBackdrop = document.querySelector("#token-detail-backdrop");
   const tokenDetailTitle = document.querySelector("#token-detail-title");
+  const priceChart = document.querySelector("#price-chart");
+  const priceChartSummary = document.querySelector("#price-chart-summary");
   const tokenDetailList = document.querySelector("#token-detail-list");
   const closeTokenDetail = document.querySelector("#close-token-detail");
   let detailOpener = null;
   let detailModel = null;
+  let activeChartNames = new Set();
+  let activeChartIsComparison = false;
+  let selectedModelNames = new Set();
   let loadedModels = [];
   const compactFormatter = new Intl.NumberFormat("es-ES", {
     notation: "compact",
@@ -116,8 +124,120 @@
     summaryGrid.hidden = false;
   }
 
+  function updateComparisonControls() {
+    const selectedCount = selectedModelNames.size;
+    comparisonStatus.textContent = selectedCount === 0
+      ? "Selecciona modelos para compararlos."
+      : `${selectedCount} ${selectedCount === 1 ? "modelo seleccionado" : "modelos seleccionados"}.`;
+    compareSelected.disabled = selectedCount < 2;
+  }
+
+  function toggleModelSelection(model, selected) {
+    if (selected) {
+      selectedModelNames.add(model.name);
+    } else {
+      selectedModelNames.delete(model.name);
+    }
+    updateComparisonControls();
+  }
+
+  function createChartMetric(label, value, className, maxValue) {
+    const metric = document.createElement("div");
+    metric.className = "chart-metric";
+
+    const header = document.createElement("div");
+    header.className = "chart-metric-header";
+    const metricLabel = document.createElement("span");
+    metricLabel.textContent = label;
+    const metricValue = document.createElement("strong");
+    metricValue.textContent = priceFormatter.format(value);
+    header.append(metricLabel, metricValue);
+
+    const track = document.createElement("div");
+    track.className = "chart-bar-track";
+    const bar = document.createElement("div");
+    bar.className = `chart-bar ${className}`;
+    bar.style.width = `${Math.max(4, (value / maxValue) * 100)}%`;
+    bar.setAttribute("aria-hidden", "true");
+    track.append(bar);
+    metric.append(header, track);
+
+    return metric;
+  }
+
+  function renderPriceChart(models, isComparison) {
+    const maxValue = Math.max(
+      ...models.flatMap((model) => [model.inputPricePerToken, model.outputPricePerToken]),
+      Number.MIN_VALUE,
+    );
+    const chartModels = models.map((model) => {
+      const article = document.createElement("article");
+      article.className = "chart-model";
+      const heading = document.createElement("h3");
+      heading.textContent = model.name;
+      article.append(
+        heading,
+        createChartMetric("Precio de entrada", model.inputPricePerToken, "input", maxValue),
+        createChartMetric("Precio de salida", model.outputPricePerToken, "output", maxValue),
+      );
+      return article;
+    });
+
+    priceChart.replaceChildren(...chartModels);
+    priceChart.setAttribute(
+      "aria-label",
+      `${isComparison ? "Comparativa de precios de" : "Precios de"} ${models.map((model) => model.name).join(", ")}`,
+    );
+    priceChartSummary.textContent = isComparison
+      ? `Comparativa de ${models.length} modelos. La escala comun toma como referencia el precio maximo seleccionado.`
+      : "Las barras muestran el precio de entrada y el precio de salida del modelo seleccionado.";
+  }
+
+  function renderChartDetails(models, isComparison) {
+    if (isComparison) {
+      const term = document.createElement("dt");
+      term.textContent = "Modelos comparados";
+      const description = document.createElement("dd");
+      description.textContent = models.map((model) => model.name).join(", ");
+      tokenDetailList.replaceChildren(term, description);
+      return;
+    }
+
+    const [model] = models;
+    const fields = [
+      ["Modalidad de entrada", model.inputModality],
+      ["Modalidad de salida", model.outputModality],
+      ["TTFT", `${model.ttft_ms} ms`],
+      ["Tokens diarios", compactFormatter.format(model.inputTokensDay + model.outputTokensDay)],
+    ];
+    tokenDetailList.replaceChildren(...fields.flatMap(([label, value]) => {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = value;
+      return [term, description];
+    }));
+  }
+
+  function openPriceChart(models, opener, isComparison = false) {
+    activeChartNames = new Set(models.map((model) => model.name));
+    activeChartIsComparison = isComparison;
+    detailModel = isComparison ? null : models[0];
+    detailOpener = opener;
+    tokenDetailTitle.textContent = isComparison ? "Comparativa de precios" : models[0].name;
+    renderPriceChart(models, isComparison);
+    renderChartDetails(models, isComparison);
+    tokenDetail.hidden = false;
+    tokenDetailBackdrop.hidden = false;
+    document.body.classList.add("drawer-open");
+    tokenDetail.focus();
+  }
+
   function renderTokenList(models, query = "") {
     tokenTableBody.replaceChildren();
+    const visibleNames = new Set(models.map((model) => model.name));
+    selectedModelNames = new Set([...selectedModelNames].filter((name) => visibleNames.has(name)));
+    updateComparisonControls();
 
     if (models.length === 0) {
       tokenTableContainer.hidden = true;
@@ -133,6 +253,21 @@
 
     const rows = models.map((model) => {
       const row = document.createElement("tr");
+      row.className = "token-row";
+      row.tabIndex = 0;
+      row.setAttribute("aria-label", `Mostrar grafico de ${model.name}`);
+
+      const selectionCell = document.createElement("td");
+      selectionCell.className = "selection-cell";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedModelNames.has(model.name);
+      checkbox.setAttribute("aria-label", `Seleccionar ${model.name} para comparar`);
+      checkbox.addEventListener("click", (event) => event.stopPropagation());
+      checkbox.addEventListener("change", () => toggleModelSelection(model, checkbox.checked));
+      selectionCell.append(checkbox);
+      row.append(selectionCell);
+
       const values = [
         model.name,
         model.inputModality,
@@ -149,14 +284,13 @@
         row.append(cell);
       }
 
-      const actionCell = document.createElement("td");
-      const detailButton = document.createElement("button");
-      detailButton.className = "detail-button";
-      detailButton.type = "button";
-      detailButton.textContent = "Ver detalle";
-      detailButton.addEventListener("click", () => openTokenDetail(model, detailButton));
-      actionCell.append(detailButton);
-      row.append(actionCell);
+      row.addEventListener("click", () => openPriceChart([model], row));
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openPriceChart([model], row);
+        }
+      });
 
       return row;
     });
@@ -169,47 +303,50 @@
     tokenTableContainer.hidden = false;
   }
 
-  function openTokenDetail(model, opener) {
-    const fields = [
-      ["Modalidad de entrada", model.inputModality],
-      ["Modalidad de salida", model.outputModality],
-      ["Precio de entrada", priceFormatter.format(model.inputPricePerToken)],
-      ["Precio de salida", priceFormatter.format(model.outputPricePerToken)],
-      ["TTFT", `${model.ttft_ms} ms`],
-      ["Tokens diarios", compactFormatter.format(model.inputTokensDay + model.outputTokensDay)],
-      ["Tokens semanales", compactFormatter.format(model.inputTokensWeek + model.outputTokensWeek)],
-    ];
-
-    tokenDetailTitle.textContent = model.name;
-    tokenDetailList.replaceChildren(...fields.flatMap(([label, value]) => {
-      const term = document.createElement("dt");
-      term.textContent = label;
-      const description = document.createElement("dd");
-      description.textContent = value;
-      return [term, description];
-    }));
-    detailModel = model;
-    detailOpener = opener;
-    tokenDetail.hidden = false;
-    tokenDetail.focus();
-  }
-
   function closeDetail() {
     tokenDetail.hidden = true;
+    tokenDetailBackdrop.hidden = true;
+    document.body.classList.remove("drawer-open");
     if (detailOpener?.isConnected) {
       detailOpener.focus();
+    } else {
+      tokenSearch.focus();
     }
     detailModel = null;
     detailOpener = null;
+    activeChartNames = new Set();
+    activeChartIsComparison = false;
   }
 
   closeTokenDetail.addEventListener("click", closeDetail);
+  tokenDetailBackdrop.addEventListener("click", closeDetail);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !tokenDetail.hidden) {
+      closeDetail();
+    }
+  });
+
+  compareSelected.addEventListener("click", () => {
+    const selectedModels = loadedModels.filter((model) => selectedModelNames.has(model.name));
+    if (selectedModels.length >= 2) {
+      openPriceChart(selectedModels, compareSelected, true);
+    }
+  });
 
   function updateTokenList() {
     const query = tokenSearch.value;
     const filteredModels = filterModels(loadedModels, query);
 
-    if (detailModel && !filteredModels.includes(detailModel)) {
+    if (activeChartIsComparison) {
+      const visibleChartModels = filteredModels.filter((model) => activeChartNames.has(model.name));
+      if (visibleChartModels.length >= 2) {
+        renderPriceChart(visibleChartModels, true);
+        renderChartDetails(visibleChartModels, true);
+        activeChartNames = new Set(visibleChartModels.map((model) => model.name));
+      } else if (tokenDetail.hidden === false) {
+        closeDetail();
+      }
+    } else if (detailModel && !filteredModels.includes(detailModel)) {
       closeDetail();
     }
 

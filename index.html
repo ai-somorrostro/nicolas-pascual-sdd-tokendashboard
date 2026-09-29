@@ -57,35 +57,48 @@
           />
           <p id="token-search-help">Busca por nombre, modalidad de entrada o modalidad de salida.</p>
         </div>
+        <div class="comparison-toolbar" aria-live="polite">
+          <p id="comparison-status">Selecciona modelos para compararlos.</p>
+          <button id="compare-selected" class="detail-button" type="button" disabled>Comparar seleccionados</button>
+        </div>
         <div id="token-list-status" class="status-message" role="status" aria-live="polite" hidden></div>
-        <div id="token-table-container" class="table-container" tabindex="0" hidden>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Modelo</th>
-                <th scope="col">Entrada</th>
-                <th scope="col">Salida</th>
-                <th scope="col">Precio entrada</th>
-                <th scope="col">Precio salida</th>
-                <th scope="col">TTFT</th>
-                <th scope="col">Tokens diarios</th>
-                <th scope="col"><span class="visually-hidden">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody id="token-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="token-detail" class="token-detail" aria-labelledby="token-detail-title" tabindex="-1" hidden>
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Detalle</p>
-            <h2 id="token-detail-title">Modelo seleccionado</h2>
+        <div class="token-list-layout">
+          <div id="token-table-container" class="table-container" tabindex="0" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col"><span class="visually-hidden">Seleccionar</span></th>
+                  <th scope="col">Modelo</th>
+                  <th scope="col">Entrada</th>
+                  <th scope="col">Salida</th>
+                  <th scope="col">Precio entrada</th>
+                  <th scope="col">Precio salida</th>
+                  <th scope="col">TTFT</th>
+                  <th scope="col">Tokens diarios</th>
+                </tr>
+              </thead>
+              <tbody id="token-table-body"></tbody>
+            </table>
           </div>
-          <button id="close-token-detail" class="detail-close" type="button">Cerrar detalle</button>
+
+          <div id="token-detail-backdrop" class="token-detail-backdrop" hidden></div>
+          <aside id="token-detail" class="token-detail" aria-labelledby="token-detail-title" tabindex="-1" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Grafico de precios</p>
+                <h2 id="token-detail-title">Modelo seleccionado</h2>
+              </div>
+              <button id="close-token-detail" class="detail-close" type="button">Cerrar grafico</button>
+            </div>
+            <div id="price-chart" class="price-chart" role="img" aria-label="Grafico de precios"></div>
+            <div class="chart-legend" aria-label="Leyenda del grafico">
+              <span><i class="legend-swatch input" aria-hidden="true"></i>Precio de entrada</span>
+              <span><i class="legend-swatch output" aria-hidden="true"></i>Precio de salida</span>
+            </div>
+            <p id="price-chart-summary" class="chart-summary" aria-live="polite"></p>
+            <dl id="token-detail-list" class="detail-grid"></dl>
+          </aside>
         </div>
-        <dl id="token-detail-list" class="detail-grid"></dl>
       </section>
     </main>
 
