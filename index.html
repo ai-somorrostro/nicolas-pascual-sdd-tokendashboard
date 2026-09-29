@@ -44,6 +44,19 @@
           </div>
           <span id="token-list-count" class="source-label" hidden></span>
         </div>
+        <div class="token-search-controls">
+          <label for="token-search">Buscar modelo</label>
+          <input
+            id="token-search"
+            name="token-search"
+            type="search"
+            placeholder="Nombre o modalidad"
+            aria-describedby="token-search-help"
+            autocomplete="off"
+            disabled
+          />
+          <p id="token-search-help">Busca por nombre, modalidad de entrada o modalidad de salida.</p>
+        </div>
         <div id="token-list-status" class="status-message" role="status" aria-live="polite" hidden></div>
         <div id="token-table-container" class="table-container" tabindex="0" hidden>
           <table>
